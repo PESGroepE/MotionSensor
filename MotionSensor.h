@@ -1,6 +1,7 @@
 #ifndef MOTIONSENSOR_H
 #define MOTIONSENSOR_H
 
+#include <ESP8266WiFi.h>
 #include "Arduino.h"
 
 class MotionSensor {

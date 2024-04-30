@@ -4,7 +4,6 @@
 MotionSensor::MotionSensor() : status(true), timer(false) {}
 
 void MotionSensor::initialisatie() {
-    Serial.begin(9600);
     pinMode(pirPin, INPUT);
     pinMode(ledPin, OUTPUT);
     digitalWrite(pirPin, LOW);
@@ -46,6 +45,3 @@ void MotionSensor::startDetectie() {
     }
 }
 
-void MotionSensor::stuurInformatie() {
-    // Hier komt code om status te sturen naar de pi of om het opteslaan in op de http server van de wemos?
-}
