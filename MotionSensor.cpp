@@ -1,7 +1,7 @@
 #include "MotionSensor.h"
-#include "ConstantsMotionSensor.h"
 
-MotionSensor::MotionSensor() : status(true), timer(false) {}
+MotionSensor::MotionSensor(const char* serverAddr, int serverPrt) 
+: serverAddress(serverAddr), serverPort(serverPrt), status(true), timer(false) {}
 
 void MotionSensor::initialisatie() {
     pinMode(pirPin, INPUT);
@@ -43,5 +43,23 @@ void MotionSensor::startDetectie() {
             delay(50);
         }
     }
+}
+
+void MotionSensor::stuurInformatie(WiFiClient& client) {
+    if (WiFi.status() == WL_CONNECTED) {
+        if (client.connect(serverAddress, serverPort)) {
+                  String statusString = (this->status) ? "false" : "true";  // Gebruik de status variabele van de MotionSensor klasse
+                  String request = "POST /motion/status?value=" + statusString + " HTTP/1.1\r\n";
+                  request += "Host: " + String(serverAddress) + "\r\n";
+                  request += "Connection: close\r\n\r\n";
+                  client.print(request);
+                  client.stop();  // Sluit de verbinding direct na het versturen van het verzoek
+        } else {
+            Serial.println("Connection to server failed");
+        }
+    } else {
+        Serial.println("WiFi not connected");
+    }
+
 }
 
