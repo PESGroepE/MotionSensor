@@ -1,9 +1,12 @@
 #include "MotionSensor.h"
 #include <ESP8266HTTPClient.h>
-#include <FastLED.h>
+#include <Adafruit_NeoPixel.h>
 
 ////////////////////////////////////////////
-CRGB leds[10];
+const int numleds = 10;
+const int ledstrippin = D6;
+Adafruit_NeoPixel leds = Adafruit_NeoPixel(numleds, ledstrippin);
+
 ////////////////////////////////////////////
 
 //wifi settings
@@ -22,10 +25,7 @@ void setup() {
     Serial.begin(115200);
 
 ///////////////////////////////////////////
-    FastLED.addLeds<WS2812B, D7, GRB>(leds, 10).setCorrection(TypicalLEDStrip);
-    FastLED.setBrightness(25);
-    fill_solid(leds, 10, CRGB::Black);
-    FastLED.show();
+    leds.begin();
 ///////////////////////////////////////////
 
 
@@ -64,12 +64,16 @@ void loop() {
       Serial.println(payload);
       if (payload=="1") {    
           //aan
-          fill_solid(leds, 10, CRGB::Red);
-          FastLED.show();
+          for (int i=0; i<numleds; i++) {
+             leds.setPixelColor(0, leds.Color(255, 255, 255));
+          }
+          leds.show();
       } else {
         //uit
-          fill_solid(leds, 10, CRGB::Black);
-          FastLED.show();
+          for (int i=0; i<numleds; i++) {
+             leds.setPixelColor(0, leds.Color(0, 0, 0));
+          }
+          leds.show();
       }
       // Hier kun je de payload verwerken om te bepalen of het licht aan of uit moet
       // Bijvoorbeeld: if (payload == "ON") { ... }
