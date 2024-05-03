@@ -1,13 +1,20 @@
-#include "MotionSensor.h"
-
+#include "MotionSensor.h" // Inclusie van de headerbestanden voor de MotionSensor klasse
+/**
+ * @brief Constructor voor de MotionSensor klasse.
+ * 
+ * @param serverAddr Het IP-adres of de hostname van de server.
+ * @param serverPrt Het poortnummer van de server.
+ */
 MotionSensor::MotionSensor(const char* serverAddr, int serverPrt) 
 : serverAddress(serverAddr), serverPort(serverPrt), status(true), timer(false) {}
-
+/**
+ * @brief Functie voor de initiële configuratie van de sensor.
+ */
 void MotionSensor::initialisatie() {
-    pinMode(pirPin, INPUT);
-    pinMode(ledPin, OUTPUT);
-    digitalWrite(pirPin, LOW);
-    digitalWrite(ledPin, HIGH);
+    pinMode(pirPin, INPUT); // Configureer PIR-sensor pin als input
+    pinMode(ledPin, OUTPUT);  // Configureer LED-pin als output
+    digitalWrite(pirPin, LOW);  // Stel PIR-sensor pin laag in
+    digitalWrite(ledPin, HIGH); // Schakel LED uit
 
     Serial.print("Kalibreren van de sensor ");
     for (int i = 0; i < kalibratieTijd; i++) {
@@ -18,7 +25,9 @@ void MotionSensor::initialisatie() {
     Serial.println("SENSOR ACTIEF");
     delay(1000);
 }
-
+/**
+ * @brief Functie voor het starten van de bewegingsdetectie.
+ */
 void MotionSensor::startDetectie() {
     if (digitalRead(pirPin) == HIGH) {
         if (status) {
@@ -44,7 +53,11 @@ void MotionSensor::startDetectie() {
         }
     }
 }
-
+/**
+ * @brief Functie voor het verzenden van informatie naar de server.
+ * 
+ * @param client WiFiClient object voor het maken van de verbinding.
+ */
 void MotionSensor::stuurInformatie(WiFiClient& client) {
     if (WiFi.status() == WL_CONNECTED) {
         if (client.connect(serverAddress, serverPort)) {
