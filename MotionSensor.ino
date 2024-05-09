@@ -3,7 +3,7 @@
 #include <Adafruit_NeoPixel.h>  // Inclusie van de headerbestanden voor de Adafruit NeoPixel bibliotheek
 
 ////////////////////////////////////////////
-const int numleds = 10; // Aantal LED's in de LED-strip
+const int numleds = 60; // Aantal LED's in de LED-strip
 const int ledstrippin = D6; // Pinnummer waaraan de LED-strip is aangesloten
 Adafruit_NeoPixel leds = Adafruit_NeoPixel(numleds, ledstrippin); // Instantiëring van het NeoPixel object
 ////////////////////////////////////////////
@@ -64,13 +64,13 @@ void loop() {
       if (payload=="1") {    
           // Aan
           for (int i=0; i<numleds; i++) {
-             leds.setPixelColor(0, leds.Color(255, 255, 255));
+             leds.setPixelColor(i, leds.Color(255, 255, 255));
           }
           leds.show();  // Toon de LED-status
       } else {
          // Uit
           for (int i=0; i<numleds; i++) {
-             leds.setPixelColor(0, leds.Color(0, 0, 0));
+             leds.setPixelColor(i, leds.Color(0, 0, 0));
           }
           leds.show();  // Toon de LED-status
       }
