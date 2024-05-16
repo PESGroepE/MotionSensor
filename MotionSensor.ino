@@ -16,7 +16,8 @@ const char* password = "pigroep5"; // Vervang door je WiFi wachtwoord
 const char* serverAddress = "10.0.10.1"; // Vervang door het IP-adres of de hostname van je server
 const int serverPort = 8080; // Poortnummer van de server
 
-MotionSensor motionSensor(serverAddress, serverPort); // Instantiëring van het MotionSensor object
+MotionSensor motionSensor1(serverAddress, serverPort, 5, BUILTIN_LED, 1); // Instantiëring van het MotionSensor object
+MotionSensor motionSensor2(serverAddress, serverPort, 4, BUILTIN_LED, 2); // Instantiëring van het MotionSensor object
 WiFiClient client;  // Instantiëring van het WiFiClient object
 HTTPClient http;  // Instantiëring van het HTTPClient object
 /**
@@ -36,14 +37,17 @@ void setup() {
     Serial.println("Connected to WiFi");  // Geef aan dat de verbinding tot stand is gebracht
     Serial.println(WiFi.localIP()); // Geef aan dat de verbinding tot stand is gebracht
 
-    motionSensor.initialisatie(); // Geef aan dat de verbinding tot stand is gebracht
+    motionSensor1.initialisatie(); // Geef aan dat de verbinding tot stand is gebracht
+    motionSensor2.initialisatie(); // Geef aan dat de verbinding tot stand is gebracht
 }
 /**
  * @brief Functie die continu wordt uitgevoerd na de setup.
  */
 void loop() {
-    motionSensor.startDetectie(); // Start de bewegingsdetectie
-    motionSensor.stuurInformatie(client); // Stuur informatie naar de server
+    motionSensor1.startDetectie(); // Start de bewegingsdetectie
+    motionSensor2.startDetectie(); // Start de bewegingsdetectie
+    motionSensor1.stuurInformatie(client); // Stuur informatie naar de server
+    motionSensor2.stuurInformatie(client); // Stuur informatie naar de server
     delay(100); // Wacht kort
 
   // GET-verzoek

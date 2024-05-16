@@ -5,16 +5,19 @@
  * @param serverAddr Het IP-adres of de hostname van de server.
  * @param serverPrt Het poortnummer van de server.
  */
-MotionSensor::MotionSensor(const char* serverAddr, int serverPrt) 
-: serverAddress(serverAddr), serverPort(serverPrt), status(true), timer(false) {}
+MotionSensor::MotionSensor(const char* serverAddr, int serverPrt, int pirPin, int ledPin, int sensorId) 
+: serverAddress(serverAddr), pirSensorPin(pirPin), ledIndicatorPin(ledPin), serverPort(serverPrt), id(sensorId){
+    status = false;
+    timer = false;
+}
 /**
  * @brief Functie voor de initiële configuratie van de sensor.
  */
 void MotionSensor::initialisatie() {
-    pinMode(pirPin, INPUT); // Configureer PIR-sensor pin als input
-    pinMode(ledPin, OUTPUT);  // Configureer LED-pin als output
-    digitalWrite(pirPin, LOW);  // Stel PIR-sensor pin laag in
-    digitalWrite(ledPin, HIGH); // Schakel LED uit
+    pinMode(pirSensorPin, INPUT); // Configureer PIR-sensor pin als input
+    pinMode(ledIndicatorPin, OUTPUT);  // Configureer LED-pin als output
+    digitalWrite(pirSensorPin, LOW);  // Stel PIR-sensor pin laag in
+    digitalWrite(ledIndicatorPin, HIGH); // Schakel LED uit 
 
     Serial.print("Kalibreren van de sensor ");
     for (int i = 0; i < kalibratieTijd; i++) {
@@ -29,25 +32,25 @@ void MotionSensor::initialisatie() {
  * @brief Functie voor het starten van de bewegingsdetectie.
  */
 void MotionSensor::startDetectie() {
-    if (digitalRead(pirPin) == HIGH) {
+    if (digitalRead(pirSensorPin) == HIGH) {
         if (status) {
-            digitalWrite(ledPin, LOW);
-            Serial.println("---\nBeweging gedetecteerd, Status: " + String(status));
+            digitalWrite(ledIndicatorPin, LOW);
+            Serial.println("---\nBeweging gedetecteerd, Sensor ID: " + String(this->getId()) + ", Status: " + String(status));
             status = false;
             delay(50);
         }
         timer = true;
     }
 
-    if (digitalRead(pirPin) == LOW) {
+    if (digitalRead(pirSensorPin) == LOW) {
         if (timer) {
             laagTijd = millis();
             timer = false;
         }
 
         if (!status && millis() - laagTijd > pauze) {
-            digitalWrite(ledPin, HIGH);
-            Serial.println("---\nBeweging gestopt, Status: " + String(status));
+            digitalWrite(ledIndicatorPin, HIGH);
+            Serial.println("---\nBeweging gestopt, Sensor ID: " + String(this->getId()) + ", Status: " + String(status));
             status = true;
             delay(50);
         }
@@ -74,5 +77,9 @@ void MotionSensor::stuurInformatie(WiFiClient& client) {
         Serial.println("WiFi not connected");
     }
 
+}
+
+int MotionSensor::getId() {
+    return id;
 }
 
