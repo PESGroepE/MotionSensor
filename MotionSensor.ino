@@ -1,88 +1,89 @@
-#include "MotionSensor.h" // Inclusie van de headerbestanden voor de MotionSensor klasse
-#include <ESP8266HTTPClient.h>  // Inclusie van de headerbestanden voor de ESP8266 HTTP-client
-#include <Adafruit_NeoPixel.h>  // Inclusie van de headerbestanden voor de Adafruit NeoPixel bibliotheek
+#include "MotionSensor.h"
+#include <ESP8266HTTPClient.h>
+// #include <Adafruit_NeoPixel.h>
+#include "RGBLeds.h"
 
-////////////////////////////////////////////
-const int numleds = 60; // Aantal LED's in de LED-strip
-const int ledstrippin = D6; // Pinnummer waaraan de LED-strip is aangesloten
-Adafruit_NeoPixel leds = Adafruit_NeoPixel(numleds, ledstrippin); // Instantiëring van het NeoPixel object
-////////////////////////////////////////////
 
-// WIFI-instellingen
+// Define the number of LEDs in the strip
+// #define NUM_LEDS 60
+// #define LED_PIN D6
+
+// Create an instance of the Adafruit_NeoPixel class
+// Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
+RGBLeds strip;
+
+// WiFi settings
 const char* ssid = "pigroep5"; // Vervang door je WiFi SSID
 const char* password = "pigroep5"; // Vervang door je WiFi wachtwoord
 
-// Serverinstellingen
+// Server settings
 const char* serverAddress = "10.0.10.1"; // Vervang door het IP-adres of de hostname van je server
 const int serverPort = 8080; // Poortnummer van de server
 
-MotionSensor motionSensor1(serverAddress, serverPort, 5, BUILTIN_LED, 1); // Instantiëring van het MotionSensor object
-MotionSensor motionSensor2(serverAddress, serverPort, 4, BUILTIN_LED, 2); // Instantiëring van het MotionSensor object
-WiFiClient client;  // Instantiëring van het WiFiClient object
-HTTPClient http;  // Instantiëring van het HTTPClient object
-/**
- * @brief Functie voor de initiële setup van de Arduino.
- */
+MotionSensor motionSensor(serverAddress, serverPort);
+WiFiClient client;
+HTTPClient http;
+
 void setup() {
-    Serial.begin(115200); // Start de seriële communicatie
-    leds.begin(); // Initialiseer de NeoPixel LED-strip
+    Serial.begin(115200);
 
-    WiFi.begin(ssid, password); // Verbind met het WiFi-netwerk
+    // Initialize the NeoPixel strip
+    // strip.begin();
+    // strip.setBrightness(25);
+    // strip.show(); // Initialize all pixels to 'off'
 
-    // Wacht tot de verbinding tot stand is gebracht
+    WiFi.begin(ssid, password);
+
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
     }
-    Serial.println("Connected to WiFi");  // Geef aan dat de verbinding tot stand is gebracht
-    Serial.println(WiFi.localIP()); // Geef aan dat de verbinding tot stand is gebracht
+    Serial.println("Connected to WiFi");
+    Serial.println(WiFi.localIP());
 
-    motionSensor1.initialisatie(); // Geef aan dat de verbinding tot stand is gebracht
-    motionSensor2.initialisatie(); // Geef aan dat de verbinding tot stand is gebracht
+    motionSensor.initialisatie();
 }
-/**
- * @brief Functie die continu wordt uitgevoerd na de setup.
- */
+
 void loop() {
-    motionSensor1.startDetectie(); // Start de bewegingsdetectie
-    motionSensor2.startDetectie(); // Start de bewegingsdetectie
-    motionSensor1.stuurInformatie(client); // Stuur informatie naar de server
-    motionSensor2.stuurInformatie(client); // Stuur informatie naar de server
-    delay(100); // Wacht kort
-
-  // GET-verzoek
-  String host = "10.0.10.1:8080";  // Vervang door het IP-adres of hostname van je Raspberry Pi
-  String url = "http://" + host + "/led/status";  // Zorg dat dit het juiste endpoint is
-
-  // Voer het GET-verzoek uit
-  if (http.begin(client, url)) {  // HTTP
-    Serial.print("[HTTP] GET...\n");
-    int httpCode = http.GET();
-
-    // Controleer de HTTP-statuscode
-    if (httpCode < 0) {
-      Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
-    } else if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-      String payload = http.getString();  // Ontvang het antwoord van de server
-      Serial.println(payload);  // Geef het ontvangen bericht weer
-      if (payload=="1") {    
-          // Aan
-          for (int i=0; i<numleds; i++) {
-             leds.setPixelColor(i, leds.Color(255, 255, 255));
-          }
-          leds.show();  // Toon de LED-status
-      } else {
-         // Uit
-          for (int i=0; i<numleds; i++) {
-             leds.setPixelColor(i, leds.Color(0, 0, 0));
-          }
-          leds.show();  // Toon de LED-status
-      }
-      // Verwerk het ontvangen bericht om te bepalen of het licht aan of uit moet
-      // Bijvoorbeeld: if (payload == "ON") { ... }
+bool previousStatus = motionSensor.getStatus(); // Voeg een getter toe voor de status
+    motionSensor.startDetectie();
+    if (motionSensor.getStatus() != previousStatus) {
+        motionSensor.stuurInformatie(client);
     }
-    http.end(); // Sluit de HTTP-client af
-  } else {
-    Serial.println("[HTTP] Unable to connect"); // Geef aan dat er geen verbinding mogelijk is
-  }
+    delay(100);
+
+    // Get request
+    String host = "10.0.10.1:8080";  // Vervang door het IP-adres of hostname van je Raspberry Pi
+    String url = "http://" + host + "/led/status";  // Zorg dat dit het juiste endpoint is
+
+    if (http.begin(client, url)) {  // HTTP
+        Serial.print("[HTTP] GET...\n");
+        int httpCode = http.GET();
+
+        // httpCode zal negatief zijn bij een fout
+        if (httpCode < 0) {
+            Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+        } else if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+            String payload = http.getString();
+            Serial.println(payload);
+            if (payload == "1") {    
+                // aan
+                strip.entreelichtAan();
+                // for (int i = 0; i < NUM_LEDS; i++) {
+                //     strip.setPixelColor(i, strip.Color(255, 255, 255)); // Red color
+                // }
+                // strip.show();
+            } else {
+                // uit
+                strip.lichtUit();
+                // for (int i = 0; i < NUM_LEDS; i++) {
+                //     strip.setPixelColor(i, strip.Color(0, 0, 0)); // Turn off
+                // }
+                // strip.show();
+            }
+        }
+        http.end();
+    } else {
+        Serial.println("[HTTP] Unable to connect");
+    }
 }

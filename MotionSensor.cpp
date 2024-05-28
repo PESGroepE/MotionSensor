@@ -1,23 +1,13 @@
-#include "MotionSensor.h" // Inclusie van de headerbestanden voor de MotionSensor klasse
-/**
- * @brief Constructor voor de MotionSensor klasse.
- * 
- * @param serverAddr Het IP-adres of de hostname van de server.
- * @param serverPrt Het poortnummer van de server.
- */
-MotionSensor::MotionSensor(const char* serverAddr, int serverPrt, int pirPin, int ledPin, int sensorId) 
-: serverAddress(serverAddr), pirSensorPin(pirPin), ledIndicatorPin(ledPin), serverPort(serverPrt), id(sensorId){
-    status = false;
-    timer = false;
-}
-/**
- * @brief Functie voor de initiële configuratie van de sensor.
- */
+#include "MotionSensor.h"
+
+MotionSensor::MotionSensor(const char* serverAddr, int serverPrt) 
+: serverAddress(serverAddr), serverPort(serverPrt), status(true), timer(false) {}
+
 void MotionSensor::initialisatie() {
-    pinMode(pirSensorPin, INPUT); // Configureer PIR-sensor pin als input
-    pinMode(ledIndicatorPin, OUTPUT);  // Configureer LED-pin als output
-    digitalWrite(pirSensorPin, LOW);  // Stel PIR-sensor pin laag in
-    digitalWrite(ledIndicatorPin, HIGH); // Schakel LED uit 
+    pinMode(pirPin, INPUT);
+    pinMode(ledPin, OUTPUT);
+    digitalWrite(pirPin, LOW);
+    digitalWrite(ledPin, HIGH);
 
     Serial.print("Kalibreren van de sensor ");
     for (int i = 0; i < kalibratieTijd; i++) {
@@ -28,39 +18,33 @@ void MotionSensor::initialisatie() {
     Serial.println("SENSOR ACTIEF");
     delay(1000);
 }
-/**
- * @brief Functie voor het starten van de bewegingsdetectie.
- */
+
 void MotionSensor::startDetectie() {
-    if (digitalRead(pirSensorPin) == HIGH) {
+    if (digitalRead(pirPin) == HIGH) {
         if (status) {
-            digitalWrite(ledIndicatorPin, LOW);
-            Serial.println("---\nBeweging gedetecteerd, Sensor ID: " + String(this->getId()) + ", Status: " + String(status));
+            digitalWrite(ledPin, LOW);
+            Serial.println("---\nBeweging gedetecteerd, Status: " + String(status));
             status = false;
             delay(50);
         }
         timer = true;
     }
 
-    if (digitalRead(pirSensorPin) == LOW) {
+    if (digitalRead(pirPin) == LOW) {
         if (timer) {
             laagTijd = millis();
             timer = false;
         }
 
         if (!status && millis() - laagTijd > pauze) {
-            digitalWrite(ledIndicatorPin, HIGH);
-            Serial.println("---\nBeweging gestopt, Sensor ID: " + String(this->getId()) + ", Status: " + String(status));
+            digitalWrite(ledPin, HIGH);
+            Serial.println("---\nBeweging gestopt, Status: " + String(status));
             status = true;
             delay(50);
         }
     }
 }
-/**
- * @brief Functie voor het verzenden van informatie naar de server.
- * 
- * @param client WiFiClient object voor het maken van de verbinding.
- */
+
 void MotionSensor::stuurInformatie(WiFiClient& client) {
     if (WiFi.status() == WL_CONNECTED) {
         if (client.connect(serverAddress, serverPort)) {
@@ -77,9 +61,5 @@ void MotionSensor::stuurInformatie(WiFiClient& client) {
         Serial.println("WiFi not connected");
     }
 
-}
-
-int MotionSensor::getId() {
-    return id;
 }
 
