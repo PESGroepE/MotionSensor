@@ -5,7 +5,7 @@
  *
  * Initialiseert de LED's met het opgegeven aantal, pin en kleurenindeling.
  */
-RGBLeds::RGBLeds() : leds(AANTAL_LEDS, PIN, NEO_GRB + NEO_KHZ800) {
+RGBLeds::RGBLeds() : leds(AANTAL_LEDS, PIN, NEO_GRB + NEO_KHZ800),r(255),g(255),b(255) {
     leds.begin();
     leds.setBrightness(100);
     leds.clear();
@@ -35,7 +35,7 @@ void RGBLeds::brandlichtAan() {
  */
 void RGBLeds::entreelichtAan(){
     for(int i = 0; i < AANTAL_LEDS; i++){
-        leds.setPixelColor(i, leds.Color(255, 255, 255));
+        leds.setPixelColor(i, leds.Color(r,g,b));
     }
     leds.show();
     delay(100);
@@ -48,8 +48,15 @@ void RGBLeds::entreelichtAan(){
  */
 void RGBLeds::lichtUit(){
     for(int i = 0; i < AANTAL_LEDS; i ++){
-        leds.setPixelColor(i, leds.Color(0, 0, 0));
+        leds.setPixelColor(i, leds.Color(0,0,0));
     }
     leds.show();
     delay(100);
 }
+
+void RGBLeds::setKleur(int rood, int groen , int blauw){
+    r=rood;
+    g=groen;
+    b=blauw;
+}
+

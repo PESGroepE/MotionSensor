@@ -1,12 +1,11 @@
 #include "MotionSensor.h"
 
 MotionSensor::MotionSensor(const char* serverAddr, int serverPrt) 
-: serverAddress(serverAddr), serverPort(serverPrt), status(true), timer(false) {}
+: serverAddress(serverAddr), serverPort(serverPrt), status(true) {}
 
 void MotionSensor::initialisatie() {
     pinMode(pirPin, INPUT);
     pinMode(ledPin, OUTPUT);
-    digitalWrite(pirPin, LOW);
     digitalWrite(ledPin, HIGH);
 
     Serial.print("Kalibreren van de sensor ");
@@ -19,30 +18,17 @@ void MotionSensor::initialisatie() {
     delay(1000);
 }
 
-void MotionSensor::startDetectie() {
-    if (digitalRead(pirPin) == HIGH) {
-        if (status) {
-            digitalWrite(ledPin, LOW);
-            Serial.println("---\nBeweging gedetecteerd, Status: " + String(status));
-            status = false;
-            delay(50);
-        }
-        timer = true;
+void MotionSensor::startDetectie(WiFiClient& client) {
+    status = digitalRead(pirPin);
+    if (status == HIGH) {
+      delay(1000);
+      status = digitalRead(pirPin);
+      if (status == HIGH) {
+        oldstatus = true;
+      }
     }
+    Serial.println(status);
 
-    if (digitalRead(pirPin) == LOW) {
-        if (timer) {
-            laagTijd = millis();
-            timer = false;
-        }
-
-        if (!status && millis() - laagTijd > pauze) {
-            digitalWrite(ledPin, HIGH);
-            Serial.println("---\nBeweging gestopt, Status: " + String(status));
-            status = true;
-            delay(50);
-        }
-    }
 }
 
 void MotionSensor::stuurInformatie(WiFiClient& client) {

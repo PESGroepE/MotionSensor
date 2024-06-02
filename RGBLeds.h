@@ -28,12 +28,15 @@ public:
      */
     void lichtUit();
 
+    void setKleur(int, int, int);
+
 private:
     static const int PIN = D6; ///< Pinnummer voor het aansturen van de LED's
     static const int AANTAL_LEDS = 60; ///< Totaal aantal LED's
     static const int GROEP = 10; ///< Aantal LED's per groep
 
     Adafruit_NeoPixel leds; ///< Object voor het aansturen van NeoPixel LED's
+    int r, g, b;
 };
 
 #endif
